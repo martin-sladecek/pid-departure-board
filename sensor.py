@@ -11,7 +11,6 @@ _LOGGER = logging.getLogger(__name__)
 
 async def async_setup_entry(hass, entry, async_add_entities):
     api_key = entry.data["api_key"]
-    # api_key = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MzcxMCwiaWF0IjoxNzUwNDgyMTQzLCJleHAiOjExNzUwNDgyMTQzLCJpc3MiOiJnb2xlbWlvIiwianRpIjoiMzk0NTBjNGUtMTcwZi00YzkxLThiNzUtZWU3NjA3YTU3Njc1In0.ToQe9PCmFbfk2jdNQ1qFfNICOXZOnMl2ntlQqFcq69o"
     stop_ids = entry.data["stop_ids"]
 
     api = GolemioAPI(api_key)
