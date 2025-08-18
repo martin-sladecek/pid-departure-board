@@ -1,0 +1,17 @@
+{
+  "domain": "pid_departure_board",
+  "name": "PID Departure Boards",
+  "codeowners": [
+    "@msladece"
+  ],
+  "config_flow": true,
+  "dependencies": [],
+  "documentation": "https://github.com/TBD",
+  "homekit": {},
+  "iot_class": "cloud_polling",
+  "requirements": [],
+  "single_config_entry": false,
+  "ssdp": [],
+  "version": "1.0.1",
+  "zeroconf": []
+}
