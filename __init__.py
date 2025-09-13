@@ -2,15 +2,10 @@
 
 from __future__ import annotations
 
-
 from homeassistant.core import HomeAssistant
-
 
 from .const import PLATFORMS
 from .models import RuntimeData, PidConfigEntry
-
-
-
 
 
 async def async_setup_entry(hass: HomeAssistant, config_entry: PidConfigEntry) -> bool:

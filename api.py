@@ -1,31 +1,32 @@
 from datetime import timedelta
 
 import aiohttp
-import async_timeout
+from async_timeout import timeout
 import logging
-from multidict import MultiDict
+import asyncio
+from typing import Any
 
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 _LOGGER = logging.getLogger(__name__)
 
 class GolemioAPI:
-    def __init__(self, api_key):
+    def __init__(self, session: aiohttp.ClientSession, api_key: str):
+        self.session = session
         self.api_key = api_key
 
-    async def get_departures(self, stop_ids: list[str]):
+    async def get_departures(self, stop_ids: list[str]) -> dict[str, Any]:
         headers = {"x-access-token": self.api_key}
-        params = MultiDict([("ids[]", v) for v in stop_ids])
-        params.merge({"minutesBefore": 0, "minutesAfter": 60})
-        async with aiohttp.ClientSession() as session:
-            with async_timeout.timeout(10):
-                async with session.get(
-                    "https://api.golemio.cz/v2/pid/departureboards",
-                    headers=headers,
-                    params=params
-                ) as resp:
-                    resp.raise_for_status()
-                    return await resp.json()
+        params = [("ids[]", v) for v in stop_ids]
+        params += [("minutesBefore", 0), ("minutesAfter", 60)]
+        async with timeout(10):
+            async with self.session.get(
+                "https://api.golemio.cz/v2/pid/departureboards",
+                headers=headers,
+                params=params,
+            ) as resp:
+                resp.raise_for_status()
+                return await resp.json()
 
 
 class GolemioCoordinator(DataUpdateCoordinator):
@@ -39,7 +40,7 @@ class GolemioCoordinator(DataUpdateCoordinator):
         self.api = api
         self.stop_ids = stop_ids
 
-    def group_by_stop_id(self, data):
+    def group_by_stop_id(self, data: dict[str, Any]) -> dict[str, Any]:
         result = {}
         for stop in data.get("stops", []):
             stop_id = stop["stop_id"]
@@ -60,5 +61,7 @@ class GolemioCoordinator(DataUpdateCoordinator):
         try:
             data = await self.api.get_departures(self.stop_ids)
             return self.group_by_stop_id(data)
-        except Exception as err:
+        except aiohttp.ClientResponseError as err:
+            raise UpdateFailed(f"HTTP {err.status} while fetching {err.request_info.real_url}: {err.message}")
+        except (aiohttp.ClientError, asyncio.TimeoutError) as err:
             raise UpdateFailed(f"Error fetching data: {err}")

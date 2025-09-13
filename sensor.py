@@ -1,18 +1,22 @@
 """Sensors for PID Departure Board integration."""
 
-from homeassistant.components.sensor import SensorEntity
+from homeassistant.components.sensor import SensorEntity, SensorDeviceClass
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.core import HomeAssistant
+from homeassistant.util import dt as dt_util
 
 from .const import DOMAIN
 from .api import GolemioAPI, GolemioCoordinator
 from .models import PidConfigEntry
 
-
-async def async_setup_entry(hass, entry: PidConfigEntry, async_add_entities):
+async def async_setup_entry(hass: HomeAssistant, entry: PidConfigEntry, async_add_entities: AddEntitiesCallback):
     api_key = entry.runtime_data.api_key
     stop_ids = entry.runtime_data.stop_ids
 
-    api = GolemioAPI(api_key)
+    api = GolemioAPI(async_get_clientsession(hass), api_key)
 
     entities = []
     coordinator = GolemioCoordinator(hass, api, stop_ids)
@@ -32,12 +36,13 @@ def flatten_dict(d, parent_key="", sep="_"):
     return items
 
 
-class PidStopSensor(SensorEntity):
+class PidStopSensor(CoordinatorEntity, SensorEntity):
 
     def __init__(self, coordinator, stop_id):
-        self.coordinator = coordinator
+        super().__init__(coordinator)
         self.stop_id = stop_id
         self.stop_name = self.coordinator.data[self.stop_id]["stop"]["stop_name"]
+        self._attr_device_class = SensorDeviceClass.TIMESTAMP
         self._attr_device_info = DeviceInfo(identifiers={(DOMAIN, stop_id)},
                                             name=f"{self.stop_name} Stop",
                                             entry_type=DeviceEntryType.SERVICE)
@@ -58,5 +63,16 @@ class PidStopSensor(SensorEntity):
         attrs["departures"] = departures
         return attrs
 
-    async def async_update(self):
-        await self.coordinator.async_request_refresh()
+    @property
+    def native_value(self):
+        departures = self.coordinator.data[self.stop_id].get("departures", [])
+        if not departures:
+            return None
+        ts = departures[0].get("departure_timestamp",{}).get("predicted")
+        if not ts:
+            return None
+        dt = dt_util.parse_datetime(ts)
+        if dt:
+            dt = dt_util.as_utc(dt)
+        return dt
+

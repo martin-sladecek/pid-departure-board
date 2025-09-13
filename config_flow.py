@@ -14,10 +14,14 @@ class PidConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             if not api_key:
                 errors["api_key"] = "missing_api_key"
             else:
-                return self.async_create_entry(
-                    title="PID Departure Board",
-                    data={"api_key": api_key, "stop_ids": user_input["stop_ids"].split(",")},
-                )
+                stop_ids = [s.strip() for s in user_input["stop_ids"].split(",") if s.strip()]
+                if not stop_ids:
+                    errors["stop_ids"] = "invalid_stop_ids"
+                else:
+                    return self.async_create_entry(
+                        title="PID Departure Board",
+                        data={"api_key": api_key, "stop_ids": stop_ids},
+                    )
 
         return self.async_show_form(
             step_id="user",
