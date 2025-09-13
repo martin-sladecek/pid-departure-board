@@ -1,31 +1,51 @@
-# Integration 101 Template
+# PID Departure Board – Home Assistant Custom Integration
 
-So this is your starting point into writing your first Home Assistant integration (or maybe just advancing your knowledge and improving something you have already written).
+Show upcoming departures from Prague Integrated Transport (PID) stops directly in Home Assistant. Data is fetched from the Golemio API and exposed as one sensor per configured stop.
 
-Well, firstly, I hope you enjoy doing it.  There is something very satisfying to be able to build something into Home Assistant that controls your devices!
+- One sensor entity per stop ID
+- Attributes include stop_name and a list of upcoming departures
+- Updates every ~30 seconds via a DataUpdateCoordinator
 
-So, below is a more detailed explanaition of the major building blocks demonstrated in this example.
+## Requirements
 
-If you get stuck, either post a forum question or an issue on this github repo and I'll try my best to help you.  As a note, it always helps if I can see your code, so please make sure you provide a link to that.
+- A Golemio (PID) API key
+  - Get one from: https://api.golemio.cz/api-keys/dashboard
+- PID stop IDs you want to monitor (comma-separated)
+  - You can obtain stop IDs from [PID datasets](https://opendata.praha.eu/datasets/https%3A%2F%2Fapi.opendata.praha.eu%2Flod%2Fcatalog%2F9a6a1d8e-45b9-41de-b9ae-0bcec7126876) or [Golemio API](https://api.golemio.cz/pid/docs/openapi/#/). The IDs should correspond to PID stop identifiers.
 
-1. **Config Flow**
+## Installation
 
-    This is the functionality to provide setup via the UI.  Many new starters to coding, start with a yaml config as it seems easier, but once you understand how to write a config flow (and it is quite simple), this is a much better way to setup and manage your integration from the start.
+Manual install:
+1. Copy this repository’s directory into your Home Assistant config at:
+   `<config>/custom_components/pid_departure_board`
+2. Restart Home Assistant.
+3. Go to Settings → Devices & Services → Integrations → Add Integration → search for “PID Departure Boards”.
 
-    See the config_flow.py file with comments to see how it works.  This is much enhanced from the scaffold version to include a reconfigure flow and options flow.
+Repository: https://github.com/martin-sladecek/pid-departure-board
 
-    It is possible (and quite simple) to do multi step flows, which will be covered in another later example.
+## Configuration
 
-2. **The DataUpdateCoordinator**
+When adding the integration via the UI, you will be prompted for:
+- PID API key
+- Stop IDs (comma separated), for example: `U1234,U5678`
 
-    To me, this should be a default for any integration that gets its data from an api (whether it be a pull (polling) or push type api). It provides much of the functionality to manage polling, receive a websocket message, process your data and update all your entities without you having to do much coding and ensures that all api code is ring fenced within this class.
+The integration creates:
+- A sensor entity for each stop ID.
+- Unique ID pattern: `<stop_id>_departures`
+- Name pattern: `<Stop Name> Departures`
 
-3. **Devices**
+## Entity Attributes
 
-    These are a nice way to group your entities that relate to the same physical device.  Again, this is often very confusing how to create these for an integration.  However, with simple explained code, this can be quite straight forward.
+Each sensor exposes:
+- `stop_name`: Human-readable stop name from the API.
+- `departures`: A list of departures as flattened key/value dictionaries derived from the Golemio response. Keys mirror Golemio fields (nested fields are flattened with `_`).
 
-4. **Platform Entities**
+Note: The attributes are intentionally raw/flat so you can use them flexibly in templates, dashboards, and automations.
 
-    These are your sensors, switches, lights etc, and this example covers the 2 most simple ones of binary sensors, things that only have 2 states, ie On/Off or Open/Closed or Hot/Cold etc and sensors, things that can have many states ie temperature, power, luminance etc.
+## Update Interval
 
-    There are within Home Assistant things called device classes that describe what your sensor is and set icons, units etc for it.
+- The integration polls the API approximately every 30 seconds (hard-coded in the coordinator).
+
+## Disclaimer
+
+This project is not affiliated with PID or Golemio. Use of the API is subject to Golemio’s terms and rate limits.

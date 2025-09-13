@@ -1,17 +1,16 @@
-"""Interfaces with the Integration 101 Template api sensors."""
+"""Sensors for PID Departure Board integration."""
 
 from homeassistant.components.sensor import SensorEntity
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
-import logging
 
 from .const import DOMAIN
 from .api import GolemioAPI, GolemioCoordinator
+from .models import PidConfigEntry
 
-_LOGGER = logging.getLogger(__name__)
 
-async def async_setup_entry(hass, entry, async_add_entities):
-    api_key = entry.data["api_key"]
-    stop_ids = entry.data["stop_ids"]
+async def async_setup_entry(hass, entry: PidConfigEntry, async_add_entities):
+    api_key = entry.runtime_data.api_key
+    stop_ids = entry.runtime_data.stop_ids
 
     api = GolemioAPI(api_key)
 
