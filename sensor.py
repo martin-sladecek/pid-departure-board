@@ -59,8 +59,10 @@ class PidStopSensor(CoordinatorEntity, SensorEntity):
     def extra_state_attributes(self):
         attrs = {}
         departures = [flatten_dict(x) for x in self.coordinator.data[self.stop_id].get("departures", [])]
+        infotexts = self.coordinator.data[self.stop_id].get("infotexts", [])
         attrs["stop_name"] = self.coordinator.data[self.stop_id]["stop"]["stop_name"]
         attrs["departures"] = departures
+        attrs["infotexts"] = infotexts
         return attrs
 
     @property

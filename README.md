@@ -39,8 +39,9 @@ The integration creates:
 Each sensor exposes:
 - `stop_name`: Human-readable stop name from the API.
 - `departures`: A list of departures as flattened key/value dictionaries derived from the Golemio response. Keys mirror Golemio fields (nested fields are flattened with `_`).
+- `infotexts`: A list of infotexts (service announcements, disruptions, etc.) related to the stop, preserving the original structure.
 
-Note: The attributes are intentionally raw/flat so you can use them flexibly in templates, dashboards, and automations.
+Note: The departures are intentionally flattened for flexible use in templates, dashboards, and automations. Infotexts preserve their original structure for easier access to specific fields like validity periods and multilingual text.
 
 ## Update Interval
 
