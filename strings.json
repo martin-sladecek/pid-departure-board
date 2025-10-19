@@ -5,13 +5,29 @@
       "user": {
         "data": {
           "api_key": "PID API key",
-          "stop_ids": "Stop IDs (comma separated)"
+          "stop_ids": "Stop IDs"
         }
       }
     },
     "error": {
       "missing_api_key": "API key is required",
       "invalid_stop_ids": "Please enter at least one stop ID"
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "data": {
+          "stop_ids": "Stop IDs",
+          "minutes_before": "Minutes before",
+          "minutes_after": "Minutes after"
+        }
+      }
+    },
+    "error": {
+      "invalid_minutes_before": "Minutes before must be between -4320 and 30",
+      "invalid_minutes_after": "Minutes after must be between -4350 and 4320",
+      "invalid_interval_sum": "The sum of minutes before and minutes after must be greater than 0"
     }
   }
 }

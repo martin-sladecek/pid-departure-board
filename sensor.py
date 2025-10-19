@@ -19,7 +19,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: PidConfigEntry, async_ad
     api = GolemioAPI(async_get_clientsession(hass), api_key)
 
     entities = []
-    coordinator = GolemioCoordinator(hass, api, stop_ids)
+    coordinator = GolemioCoordinator(
+        hass,
+        api,
+        stop_ids,
+        entry.runtime_data.minutes_before,
+        entry.runtime_data.minutes_after,
+    )
     await coordinator.async_config_entry_first_refresh()
     for stop_id in stop_ids:
         entities.append(PidStopSensor(coordinator, stop_id))
@@ -77,4 +83,3 @@ class PidStopSensor(CoordinatorEntity, SensorEntity):
         if dt:
             dt = dt_util.as_utc(dt)
         return dt
-

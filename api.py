@@ -15,10 +15,10 @@ class GolemioAPI:
         self.session = session
         self.api_key = api_key
 
-    async def get_departures(self, stop_ids: list[str]) -> dict[str, Any]:
+    async def get_departures(self, stop_ids: list[str], minutes_before: int, minutes_after: int) -> dict[str, Any]:
         headers = {"x-access-token": self.api_key}
         params = [("ids[]", v) for v in stop_ids]
-        params += [("minutesBefore", 0), ("minutesAfter", 60)]
+        params += [("minutesBefore", minutes_before), ("minutesAfter", minutes_after)]
         async with timeout(10):
             async with self.session.get(
                 "https://api.golemio.cz/v2/pid/departureboards",
@@ -30,7 +30,7 @@ class GolemioAPI:
 
 
 class GolemioCoordinator(DataUpdateCoordinator):
-    def __init__(self, hass, api, stop_ids: list[str]):
+    def __init__(self, hass, api, stop_ids: list[str], minutes_before: int, minutes_after: int):
         super().__init__(
             hass,
             _LOGGER,
@@ -39,6 +39,8 @@ class GolemioCoordinator(DataUpdateCoordinator):
         )
         self.api = api
         self.stop_ids = stop_ids
+        self.minutes_before = minutes_before
+        self.minutes_after = minutes_after
 
     def group_by_stop_id(self, data: dict[str, Any]) -> dict[str, Any]:
         result = {}
@@ -59,7 +61,7 @@ class GolemioCoordinator(DataUpdateCoordinator):
 
     async def _async_update_data(self):
         try:
-            data = await self.api.get_departures(self.stop_ids)
+            data = await self.api.get_departures(self.stop_ids, self.minutes_before, self.minutes_after)
             return self.group_by_stop_id(data)
         except aiohttp.ClientResponseError as err:
             raise UpdateFailed(f"HTTP {err.status} while fetching {err.request_info.real_url}: {err.message}")

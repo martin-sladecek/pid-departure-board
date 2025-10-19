@@ -13,5 +13,21 @@
       "missing_api_key": "API klíč je povinný",
       "invalid_stop_ids": "Zadejte alespoň jedno ID zastávky"
     }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "data": {
+          "stop_ids": "ID zastávek (oddělená čárkou)",
+          "minutes_before": "Minuty před",
+          "minutes_after": "Minuty po"
+        }
+      }
+    },
+    "error": {
+      "invalid_minutes_before": "Minuty před musí být v rozsahu -4320 až 30",
+      "invalid_minutes_after": "Minuty po musí být v rozsahu -4350 až 4320",
+      "invalid_interval_sum": "Součet hodnot 'Minuty před' a 'Minuty po' musí být větší než 0"
+    }
   }
 }
