@@ -11,7 +11,9 @@
     },
     "error": {
       "missing_api_key": "API key is required",
-      "invalid_stop_ids": "Please enter at least one stop ID"
+      "invalid_stop_ids": "Please enter valid stop IDs",
+      "invalid_auth": "Invalid API key",
+      "cannot_connect": "Cannot connect to PID API"
     }
   },
   "options": {

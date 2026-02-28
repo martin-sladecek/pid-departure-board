@@ -47,15 +47,36 @@ class PidStopSensor(CoordinatorEntity, SensorEntity):
     def __init__(self, coordinator, stop_id):
         super().__init__(coordinator)
         self.stop_id = stop_id
-        self.stop_name = self.coordinator.data[self.stop_id]["stop"]["stop_name"]
         self._attr_device_class = SensorDeviceClass.TIMESTAMP
         self._attr_device_info = DeviceInfo(identifiers={(DOMAIN, stop_id)},
-                                            name=f"{self.stop_name} Stop",
+                                            name=f"{self._current_stop_name()} Stop",
                                             entry_type=DeviceEntryType.SERVICE)
+
+    def _stop_payload(self):
+        stop_data = self.coordinator.data.get(self.stop_id, {}).get("stop", {})
+        return stop_data if isinstance(stop_data, dict) else {}
+
+    def _current_stop_name(self):
+        stop_data = self._stop_payload()
+        return stop_data.get("stop_name") or self.stop_id
+
+    def _departure_datetime(self, departure):
+        if not isinstance(departure, dict):
+            return None
+        timestamp = departure.get("departure_timestamp", {})
+        if not isinstance(timestamp, dict):
+            return None
+        raw_ts = timestamp.get("predicted") or timestamp.get("aimed")
+        if not raw_ts:
+            return None
+        dt = dt_util.parse_datetime(raw_ts)
+        if not dt:
+            return None
+        return dt_util.as_utc(dt)
 
     @property
     def name(self):
-        return f"{self.stop_name} Departures"
+        return f"{self._current_stop_name()} Departures"
 
     @property
     def unique_id(self):
@@ -64,22 +85,23 @@ class PidStopSensor(CoordinatorEntity, SensorEntity):
     @property
     def extra_state_attributes(self):
         attrs = {}
-        departures = [flatten_dict(x) for x in self.coordinator.data[self.stop_id].get("departures", [])]
-        infotexts = self.coordinator.data[self.stop_id].get("infotexts", [])
-        attrs["stop_name"] = self.coordinator.data[self.stop_id]["stop"]["stop_name"]
+        stop_entry = self.coordinator.data.get(self.stop_id, {})
+        raw_departures = stop_entry.get("departures", [])
+        departures = [flatten_dict(x) for x in raw_departures if isinstance(x, dict)]
+        infotexts = stop_entry.get("infotexts", [])
+        attrs["stop_name"] = self._current_stop_name()
         attrs["departures"] = departures
-        attrs["infotexts"] = infotexts
+        attrs["infotexts"] = infotexts if isinstance(infotexts, list) else []
         return attrs
 
     @property
     def native_value(self):
-        departures = self.coordinator.data[self.stop_id].get("departures", [])
+        departures = self.coordinator.data.get(self.stop_id, {}).get("departures", [])
         if not departures:
             return None
-        ts = departures[0].get("departure_timestamp",{}).get("predicted")
-        if not ts:
+        valid_departures = sorted(
+            (dt for dt in (self._departure_datetime(dep) for dep in departures) if dt is not None)
+        )
+        if not valid_departures:
             return None
-        dt = dt_util.parse_datetime(ts)
-        if dt:
-            dt = dt_util.as_utc(dt)
-        return dt
+        return valid_departures[0]

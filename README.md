@@ -49,6 +49,15 @@ When adding the integration via the UI, you will be prompted for:
 - Stop IDs (multiple values supported)
   - You can paste a comma-separated list, or enter multiple values when prompted.
 
+During setup, the integration validates API access immediately:
+- Invalid API key returns an authentication error.
+- Connectivity issues (timeouts/network/API unavailability) return a connection error.
+
+Stop IDs are normalized on submit:
+- surrounding whitespace is trimmed,
+- empty values are ignored,
+- duplicates are removed while keeping the original order.
+
 After the integration is created, you can adjust options from the integration’s Configure page:
 - stop_ids: Update the set of monitored stops
 - minutes_before: Integer, default 0
@@ -59,6 +68,8 @@ Validation rules:
 - minutes_after: must be between -4350 and 4320 (minutes)
 - The sum (minutes_before + minutes_after) must be > 0
 
+Minutes fields are configured in the UI using numeric selectors.
+
 Entity naming:
 - One sensor per stop ID
 - Unique ID: `<stop_id>_departures`
@@ -67,8 +78,13 @@ Entity naming:
 ## Entity Model
 
 State (native_value):
-- Next predicted departure time for the stop (ISO timestamp displayed as time in HA)
+- Next upcoming departure time for the stop (ISO timestamp displayed as time in HA)
 - If no upcoming departures are available, the sensor state is unknown
+
+Next departure selection is deterministic:
+- departures are sorted by departure time ascending,
+- `departure_timestamp.predicted` is preferred,
+- `departure_timestamp.aimed` is used as fallback if `predicted` is unavailable.
 
 Attributes:
 - stop_name: Human-readable name from API

@@ -11,7 +11,9 @@
     },
     "error": {
       "missing_api_key": "API klíč je povinný",
-      "invalid_stop_ids": "Zadejte alespoň jedno ID zastávky"
+      "invalid_stop_ids": "Zadejte platná ID zastávek",
+      "invalid_auth": "Neplatný API klíč",
+      "cannot_connect": "Nelze se připojit k PID API"
     }
   },
   "options": {
